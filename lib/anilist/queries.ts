@@ -7,6 +7,9 @@ export const animeFields = `
     english
   }
   episodes
+  nextAiringEpisode {
+    episode
+  }
   coverImage {
     extraLarge
     large

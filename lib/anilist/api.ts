@@ -44,8 +44,11 @@ export async function queryAniList(
 export async function fetchAnimeByIds(
   animeIds: number[],
 ): Promise<Anime[]> {
-  const page = await queryAniList(
-    `
+  const anime: Anime[] = [];
+
+  for (let index = 0; index < animeIds.length; index += 50) {
+    const page = await queryAniList(
+      `
       query ($ids: [Int]) {
         Page(page: 1, perPage: 50) {
           media(type: ANIME, id_in: $ids) {
@@ -54,8 +57,10 @@ export async function fetchAnimeByIds(
         }
       }
     `,
-    { ids: animeIds },
-  );
+      { ids: animeIds.slice(index, index + 50) },
+    );
+    anime.push(...(page?.media ?? []));
+  }
 
-  return page?.media ?? [];
+  return anime;
 }

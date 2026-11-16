@@ -1,9 +1,11 @@
-import type { Anime } from "@/lib/anilist/types";
+import type { Anime, EpisodeCountSummary } from "@/lib/anilist/types";
 
 export type SavedAnime = Pick<
   Anime,
-  "id" | "title" | "episodes" | "coverImage"
+  "id" | "title" | "episodes" | "episodeCountComplete" | "coverImage"
 >;
+
+export type EpisodeCountUpdate = EpisodeCountSummary;
 
 const storageKey = "orbit-anime-list";
 export const animeListUpdatedEvent = "orbit-anime-list-updated";
@@ -48,6 +50,51 @@ export function toggleSavedAnime(anime: SavedAnime, isSaved: boolean): void {
   window.dispatchEvent(new Event(animeListUpdatedEvent));
 }
 
+export function updateSavedAnimeEpisodeCounts(
+  updates: EpisodeCountUpdate[],
+): void {
+  const savedAnime = parseSavedAnimeList(getAnimeListSnapshot());
+  const updatesById = new Map(updates.map((update) => [update.id, update]));
+  let changed = false;
+
+  const nextList = savedAnime.map((anime) => {
+    const update = updatesById.get(anime.id);
+    if (!update) {
+      return anime;
+    }
+
+    if (
+      anime.episodes === update.episodes &&
+      anime.episodeCountComplete === update.episodeCountComplete
+    ) {
+      return anime;
+    }
+
+    changed = true;
+    return {
+      ...anime,
+      episodes: update.episodes,
+      episodeCountComplete: update.episodeCountComplete,
+    };
+  });
+
+  if (changed) {
+    window.localStorage.setItem(storageKey, JSON.stringify(nextList));
+    window.dispatchEvent(new Event(animeListUpdatedEvent));
+  }
+}
+
+export function formatSavedAnimeEpisodeCount(
+  anime: Pick<SavedAnime, "episodes" | "episodeCountComplete">,
+): string {
+  if (anime.episodes === null) {
+    return "?";
+  }
+
+  const count = anime.episodes.toLocaleString("en-US");
+  return anime.episodeCountComplete === false ? `${count}+` : count;
+}
+
 function isSavedAnime(value: unknown): value is SavedAnime {
   if (typeof value !== "object" || value === null) {
     return false;
@@ -62,6 +109,8 @@ function isSavedAnime(value: unknown): value is SavedAnime {
     (anime.title.english === null || typeof anime.title.english === "string") &&
     (anime.title.romaji === null || typeof anime.title.romaji === "string") &&
     (anime.episodes === null || typeof anime.episodes === "number") &&
+    (anime.episodeCountComplete === undefined ||
+      typeof anime.episodeCountComplete === "boolean") &&
     (anime.coverImage === null ||
       (typeof anime.coverImage === "object" &&
         (anime.coverImage.extraLarge === null ||

@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import {
+  formatSavedAnimeEpisodeCount,
   getAnimeListSnapshot,
   parseSavedAnimeList,
   subscribeToAnimeList,
@@ -60,7 +61,7 @@ export default function AnimeCard({ anime }: { anime: SavedAnime }) {
         </button>
 
         <div className="absolute bottom-3 left-3 rounded-md bg-black/70 px-3 py-1 text-xs text-white backdrop-blur-md">
-          {anime.episodes ?? "?"} Episodes (all seasons)
+          {formatSavedAnimeEpisodeCount(anime)} Episodes (all seasons)
         </div>
       </div>
 

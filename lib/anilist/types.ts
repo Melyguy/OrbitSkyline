@@ -7,6 +7,10 @@ export type Anime = {
     romaji: string | null;
   };
   episodes: number | null;
+  nextAiringEpisode?: {
+    episode: number;
+  } | null;
+  episodeCountComplete?: boolean;
   coverImage: {
     extraLarge: string | null;
     large: string | null;
@@ -26,6 +30,12 @@ export type Anime = {
 export type AnimeSort =
   | "POPULARITY_DESC"
   | "START_DATE_DESC";
+
+export type EpisodeCountSummary = {
+  id: number;
+  episodes: number | null;
+  episodeCountComplete: boolean;
+};
 
 export type AniListPage = {
   data?: {

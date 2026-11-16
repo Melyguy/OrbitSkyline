@@ -140,6 +140,7 @@ export async function addSequelEpisodeCounts(
     const queue = [mainSeries.id];
 
     let totalEpisodes = 0;
+    let hasKnownEpisodeCount = false;
     let hasUnknownEpisodeCount = false;
 
     while (queue.length > 0) {
@@ -154,13 +155,24 @@ export async function addSequelEpisodeCounts(
       const anime = animeById.get(id);
 
       if (!anime) {
+        hasUnknownEpisodeCount = true;
         continue;
+      }
+
+      let episodeCount = anime.episodes;
+      if (episodeCount === null && anime.nextAiringEpisode) {
+        episodeCount = Math.max(0, anime.nextAiringEpisode.episode - 1);
+      }
+
+      if (episodeCount === null) {
+        hasUnknownEpisodeCount = true;
+      } else {
+        totalEpisodes += episodeCount;
+        hasKnownEpisodeCount = true;
       }
 
       if (anime.episodes === null) {
         hasUnknownEpisodeCount = true;
-      } else {
-        totalEpisodes += anime.episodes;
       }
 
       queue.push(...getAnimeSequelIds(anime));
@@ -168,7 +180,8 @@ export async function addSequelEpisodeCounts(
 
     return {
       ...mainSeries,
-      episodes: hasUnknownEpisodeCount ? null : totalEpisodes,
+      episodes: hasKnownEpisodeCount ? totalEpisodes : null,
+      episodeCountComplete: !hasUnknownEpisodeCount,
     };
   });
 }
