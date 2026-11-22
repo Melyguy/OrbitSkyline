@@ -10,8 +10,8 @@ const navigationLinks = [
   { label: "Home", href: "/" },
   { label:"List", href: "/list" },
   { label: "City", href: "/City" },
-  { label: "Social", href: "/social" },
-  { label: "About", href: "/about" },
+  //{ label: "Social", href: "/social" },
+  //{ label: "About", href: "/about" },
 ];
 
 export default function NewNavbar() {
