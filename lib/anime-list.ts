@@ -2,7 +2,12 @@ import type { Anime, EpisodeCountSummary } from "@/lib/anilist/types";
 
 export type SavedAnime = Pick<
   Anime,
-  "id" | "title" | "episodes" | "episodeCountComplete" | "coverImage"
+  | "id"
+  | "title"
+  | "popularity"
+  | "episodes"
+  | "episodeCountComplete"
+  | "coverImage"
 >;
 
 export type EpisodeCountUpdate = EpisodeCountSummary;
@@ -65,6 +70,7 @@ export function updateSavedAnimeEpisodeCounts(
 
     if (
       anime.episodes === update.episodes &&
+      anime.popularity === update.popularity &&
       anime.episodeCountComplete === update.episodeCountComplete
     ) {
       return anime;
@@ -73,6 +79,7 @@ export function updateSavedAnimeEpisodeCounts(
     changed = true;
     return {
       ...anime,
+      popularity: update.popularity,
       episodes: update.episodes,
       episodeCountComplete: update.episodeCountComplete,
     };
@@ -108,6 +115,9 @@ function isSavedAnime(value: unknown): value is SavedAnime {
     anime.title !== null &&
     (anime.title.english === null || typeof anime.title.english === "string") &&
     (anime.title.romaji === null || typeof anime.title.romaji === "string") &&
+    (anime.popularity === undefined ||
+      anime.popularity === null ||
+      typeof anime.popularity === "number") &&
     (anime.episodes === null || typeof anime.episodes === "number") &&
     (anime.episodeCountComplete === undefined ||
       typeof anime.episodeCountComplete === "boolean") &&

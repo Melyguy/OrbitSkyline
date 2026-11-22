@@ -110,6 +110,7 @@ function isEpisodeCountResponse(
         isRecord(count) &&
         typeof count.id === "number" &&
         Number.isSafeInteger(count.id) &&
+        (count.popularity === null || typeof count.popularity === "number") &&
         (count.episodes === null || typeof count.episodes === "number") &&
         typeof count.episodeCountComplete === "boolean",
     )

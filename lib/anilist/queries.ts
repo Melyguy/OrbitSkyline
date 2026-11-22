@@ -6,6 +6,7 @@ export const animeFields = `
     romaji
     english
   }
+  popularity
   episodes
   nextAiringEpisode {
     episode

@@ -20,6 +20,7 @@ export async function getSavedAnimeEpisodeCounts(
 
   return series.map((item) => ({
     id: item.id,
+    popularity: item.popularity ?? null,
     episodes: item.episodes,
     episodeCountComplete:
       item.episodeCountComplete ?? (item.episodes !== null),

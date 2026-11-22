@@ -6,6 +6,7 @@ export type Anime = {
     english: string | null;
     romaji: string | null;
   };
+  popularity?: number | null;
   episodes: number | null;
   nextAiringEpisode?: {
     episode: number;
@@ -33,6 +34,7 @@ export type AnimeSort =
 
 export type EpisodeCountSummary = {
   id: number;
+  popularity: number | null;
   episodes: number | null;
   episodeCountComplete: boolean;
 };

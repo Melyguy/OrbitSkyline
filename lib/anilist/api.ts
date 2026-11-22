@@ -1,4 +1,4 @@
-
+import { cacheLife } from "next/cache";
 import type { Anime, AnimeSort, AniListPage } from "./types";
 import { animeFields } from "./queries";
 
@@ -11,6 +11,9 @@ export async function queryAniList(
     sort?: AnimeSort | AnimeSort[];
   },
 ): Promise<NonNullable<AniListPage["data"]>["Page"]> {
+  "use cache";
+  cacheLife("hours");
+
   const response = await fetch("https://graphql.anilist.co/", {
     method: "POST",
     headers: {

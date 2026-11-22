@@ -6,6 +6,8 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import type { SavedAnime } from "@/lib/anime-list";
 
 const buildingColors = ["#344968", "#3b5769", "#4b4967", "#3c5a5a", "#514762"];
+const minimumBuildingHeight = 2;
+const episodeHeightRange = 14;
 
 export default function AnimeCity({ animeList }: { animeList: SavedAnime[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -52,20 +54,36 @@ export default function AnimeCity({ animeList }: { animeList: SavedAnime[] }) {
         (maximum, anime) => Math.max(maximum, anime.episodes ?? 0),
         0,
       ) || 1;
-    const tallestBuilding = animeList.reduce((maximum, anime) => {
-      const height =
-        anime.episodes === null
-          ? 2
-          : Math.max(0.8, (anime.episodes / maxEpisodes) * 9);
-      return Math.max(maximum, height);
-    }, 0);
+    const mostPopularAnime = animeList.reduce<SavedAnime | null>(
+      (mostPopular, anime) => {
+        if (typeof anime.popularity !== "number") {
+          return mostPopular;
+        }
+
+        return mostPopular === null ||
+          anime.popularity > (mostPopular.popularity ?? -1)
+          ? anime
+          : mostPopular;
+      },
+      null,
+    );
+    const tallestBuilding = animeList.reduce(
+      (maximum, anime) =>
+        Math.max(maximum, getBuildingHeight(anime.episodes, maxEpisodes)),
+      0,
+    );
 
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
     const targetHeight = tallestBuilding * 0.35;
-    camera.position.set(
+    const cameraOffset = Math.max(
       cityWidth * 1.3,
-      targetHeight + Math.max(10, cityWidth * 1.3),
       cityDepth * 1.3,
+      tallestBuilding * 1.6,
+    );
+    camera.position.set(
+      cameraOffset,
+      targetHeight + cameraOffset,
+      cameraOffset,
     );
 
     scene.add(new THREE.AmbientLight("#a9c5e8", 1.5));
@@ -127,10 +145,7 @@ export default function AnimeCity({ animeList }: { animeList: SavedAnime[] }) {
       const row = Math.floor(index / columns);
       const x = (column - (columns - 1) / 2) * spacing;
       const z = (row - (rows - 1) / 2) * spacing;
-      const height =
-        anime.episodes === null
-          ? 2
-          : Math.max(0.8, (anime.episodes / maxEpisodes) * 9);
+      const height = getBuildingHeight(anime.episodes, maxEpisodes);
       const base = new THREE.Mesh(
         new THREE.BoxGeometry(3.1, 0.18, 3.1),
         new THREE.MeshStandardMaterial({ color: "#26344b", roughness: 0.75 }),
@@ -160,6 +175,11 @@ export default function AnimeCity({ animeList }: { animeList: SavedAnime[] }) {
       rooftop.position.set(x, height + 0.26, z);
       scene.add(rooftop);
 
+      const isMostPopular = anime.id === mostPopularAnime?.id;
+      if (isMostPopular) {
+        addCrown(scene, x, height + 1.1, z);
+      }
+
       const floorCount = Math.max(1, Math.floor(height / 0.62));
       for (let floor = 0; floor < floorCount; floor += 1) {
         const y = 0.34 + floor * 0.55;
@@ -173,21 +193,31 @@ export default function AnimeCity({ animeList }: { animeList: SavedAnime[] }) {
       }
 
       const labelCanvas = document.createElement("canvas");
-      labelCanvas.width = 256;
+      labelCanvas.width = 512;
       labelCanvas.height = 96;
       const context = labelCanvas.getContext("2d");
       if (context) {
         context.fillStyle = "rgba(10, 16, 29, 0.92)";
         context.beginPath();
-        context.roundRect(4, 4, 248, 88, 18);
+        context.roundRect(4, 4, 504, 88, 18);
         context.fill();
         context.strokeStyle = "rgba(244, 198, 106, 0.75)";
         context.lineWidth = 4;
         context.stroke();
         context.fillStyle = "#f8fafc";
-        context.font = "700 48px Arial";
+        const title = anime.title.english ?? anime.title.romaji ?? "Untitled";
+        let labelText = title;
+        let fontSize = 40;
+        context.font = `700 ${fontSize}px Arial`;
+        while (context.measureText(labelText).width > 460 && fontSize > 20) {
+          fontSize -= 2;
+          context.font = `700 ${fontSize}px Arial`;
+        }
+        while (context.measureText(labelText).width > 460) {
+          labelText = `${labelText.slice(0, -4)}...`;
+        }
         context.textAlign = "center";
-        context.fillText(String(index + 1).padStart(2, "0"), 128, 65);
+        context.fillText(labelText, 256, 63);
 
         const labelTexture = new THREE.CanvasTexture(labelCanvas);
         labelTexture.colorSpace = THREE.SRGBColorSpace;
@@ -198,8 +228,8 @@ export default function AnimeCity({ animeList }: { animeList: SavedAnime[] }) {
             depthWrite: false,
           }),
         );
-        label.position.set(x, height + 0.7, z);
-        label.scale.set(1.7, 0.64, 1);
+        label.position.set(x, height + (isMostPopular ? 2.2 : 0.7), z);
+        label.scale.set(4.4, 0.825, 1);
         scene.add(label);
       }
     });
@@ -230,7 +260,8 @@ export default function AnimeCity({ animeList }: { animeList: SavedAnime[] }) {
     controls.target.set(0, targetHeight, 0);
     controls.maxPolarAngle = Math.PI / 2.05;
     controls.minDistance = 8;
-    controls.maxDistance = Math.max(cityWidth, cityDepth) * 3;
+    controls.maxDistance =
+      Math.max(cityWidth, cityDepth, tallestBuilding) * 3;
 
     const resizeObserver = new ResizeObserver(() => {
       const { width, height } = canvas.getBoundingClientRect();
@@ -298,4 +329,55 @@ export default function AnimeCity({ animeList }: { animeList: SavedAnime[] }) {
       )}
     </div>
   );
+}
+
+function getBuildingHeight(
+  episodes: number | null,
+  maxEpisodes: number,
+): number {
+  if (episodes === null) {
+    return minimumBuildingHeight;
+  }
+
+  const relativeEpisodeCount = Math.max(0, episodes) / maxEpisodes;
+  return (
+    minimumBuildingHeight +
+    Math.sqrt(relativeEpisodeCount) * episodeHeightRange
+  );
+}
+
+function addCrown(scene: THREE.Scene, x: number, y: number, z: number) {
+  const crownCanvas = document.createElement("canvas");
+  crownCanvas.width = 96;
+  crownCanvas.height = 72;
+  const context = crownCanvas.getContext("2d");
+  if (!context) {
+    return;
+  }
+
+  context.fillStyle = "#f4c66a";
+  context.beginPath();
+  context.moveTo(10, 54);
+  context.lineTo(5, 15);
+  context.lineTo(28, 33);
+  context.lineTo(48, 4);
+  context.lineTo(68, 33);
+  context.lineTo(91, 15);
+  context.lineTo(86, 54);
+  context.closePath();
+  context.fill();
+  context.fillRect(10, 55, 76, 11);
+
+  const texture = new THREE.CanvasTexture(crownCanvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const crown = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthWrite: false,
+    }),
+  );
+  crown.position.set(x, y, z);
+  crown.scale.set(1.6, 1.2, 1);
+  scene.add(crown);
 }
