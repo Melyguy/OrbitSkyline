@@ -18,7 +18,10 @@ export default function AnimeCard({ anime }: { anime: SavedAnime }) {
     () => "[]",
   );
   const isSaved = parseSavedAnimeList(snapshot).some(
-    (savedAnime) => savedAnime.id === anime.id,
+    (savedAnime) =>
+      savedAnime.id === anime.id &&
+      (savedAnime.provider ?? "anilist") ===
+        (anime.provider ?? "anilist"),
   );
   const title = anime.title.english ?? anime.title.romaji ?? "Untitled";
   const coverImage =

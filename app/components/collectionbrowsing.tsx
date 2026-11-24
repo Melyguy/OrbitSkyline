@@ -1,5 +1,5 @@
-import { getAnimeCollection } from "@/lib/anilist";
-import type { Anime, AnimeSort } from "@/lib/anilist/types";
+import { getAnimeCollection } from "@/lib/shikimori";
+import type { Anime, AnimeSort } from "@/lib/shikimori/types";
 import Link from "next/link";
 import AnimeCard from "./AnimeCard";
 

@@ -1,4 +1,3 @@
-
 import type { Anime } from "./types";
 import { fetchAnimeByIds } from "./api";
 
@@ -54,7 +53,6 @@ export async function getMainSeries(
     const missingIds = newIds.filter(
       (id) => !animeById.has(id),
     );
-
     const prequels =
       missingIds.length > 0
         ? await fetchAnimeByIds(missingIds)
@@ -78,7 +76,6 @@ export async function getMainSeries(
       visitedIds.add(mainSeries.id);
 
       const prequelId = getAnimePrequelIds(mainSeries)[0];
-
       const prequel =
         prequelId === undefined
           ? undefined
@@ -119,7 +116,6 @@ export async function addSequelEpisodeCounts(
     const missingIds = newIds.filter(
       (id) => !animeById.has(id),
     );
-
     const sequels =
       missingIds.length > 0
         ? await fetchAnimeByIds(missingIds)

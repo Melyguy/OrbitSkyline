@@ -1,6 +1,6 @@
-
 export type Anime = {
   id: number;
+  provider?: "shikimori";
   format: string | null;
   title: {
     english: string | null;
@@ -28,25 +28,17 @@ export type Anime = {
   };
 };
 
-export type AnimeSort =
-  | "POPULARITY_DESC"
-  | "START_DATE_DESC";
+export type AnimeSort = "POPULARITY_DESC" | "START_DATE_DESC";
 
 export type EpisodeCountSummary = {
   id: number;
+  provider: "shikimori";
   popularity: number | null;
   episodes: number | null;
   episodeCountComplete: boolean;
 };
 
-export type AniListPage = {
-  data?: {
-    Page?: {
-      pageInfo?: {
-        hasNextPage: boolean;
-      } | null;
-      media?: Anime[] | null;
-    } | null;
-  } | null;
-  errors?: { message: string }[];
+export type SavedAnimeMigration = {
+  fromId: number;
+  anime: Anime;
 };

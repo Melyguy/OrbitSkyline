@@ -1,8 +1,13 @@
-import type { Anime, EpisodeCountSummary } from "@/lib/anilist/types";
+import type {
+  Anime,
+  EpisodeCountSummary,
+  SavedAnimeMigration,
+} from "@/lib/shikimori/types";
 
 export type SavedAnime = Pick<
   Anime,
   | "id"
+  | "provider"
   | "title"
   | "popularity"
   | "episodes"
@@ -47,9 +52,59 @@ export function subscribeToAnimeList(onChange: () => void): () => void {
 
 export function toggleSavedAnime(anime: SavedAnime, isSaved: boolean): void {
   const savedAnime = parseSavedAnimeList(getAnimeListSnapshot());
+  const provider = anime.provider ?? "anilist";
   const nextList = isSaved
-    ? savedAnime.filter((saved) => saved.id !== anime.id)
-    : [anime, ...savedAnime.filter((saved) => saved.id !== anime.id)];
+    ? savedAnime.filter(
+        (saved) =>
+          saved.id !== anime.id ||
+          (saved.provider ?? "anilist") !== provider,
+      )
+    : [
+        anime,
+        ...savedAnime.filter(
+          (saved) =>
+            saved.id !== anime.id ||
+            (saved.provider ?? "anilist") !== provider,
+        ),
+      ];
+
+  window.localStorage.setItem(storageKey, JSON.stringify(nextList));
+  window.dispatchEvent(new Event(animeListUpdatedEvent));
+}
+
+export function applySavedAnimeMigrations(
+  migrations: SavedAnimeMigration[],
+): void {
+  const savedAnime = parseSavedAnimeList(getAnimeListSnapshot());
+  const migrationsById = new Map(
+    migrations.map((migration) => [migration.fromId, migration.anime]),
+  );
+  const nextList: SavedAnime[] = [];
+  const savedKeys = new Set<string>();
+
+  for (const anime of savedAnime) {
+    const migration =
+      anime.provider === "shikimori"
+        ? undefined
+        : migrationsById.get(anime.id);
+    const migratedAnime: SavedAnime = migration
+      ? {
+          id: migration.id,
+          provider: migration.provider,
+          title: migration.title,
+          popularity: migration.popularity,
+          episodes: migration.episodes,
+          episodeCountComplete: migration.episodeCountComplete,
+          coverImage: migration.coverImage,
+        }
+      : anime;
+    const key = `${migratedAnime.provider ?? "anilist"}:${migratedAnime.id}`;
+
+    if (!savedKeys.has(key)) {
+      savedKeys.add(key);
+      nextList.push(migratedAnime);
+    }
+  }
 
   window.localStorage.setItem(storageKey, JSON.stringify(nextList));
   window.dispatchEvent(new Event(animeListUpdatedEvent));
@@ -64,7 +119,7 @@ export function updateSavedAnimeEpisodeCounts(
 
   const nextList = savedAnime.map((anime) => {
     const update = updatesById.get(anime.id);
-    if (!update) {
+    if (!update || anime.provider !== update.provider) {
       return anime;
     }
 
@@ -111,6 +166,7 @@ function isSavedAnime(value: unknown): value is SavedAnime {
 
   return (
     typeof anime.id === "number" &&
+    (anime.provider === undefined || anime.provider === "shikimori") &&
     typeof anime.title === "object" &&
     anime.title !== null &&
     (anime.title.english === null || typeof anime.title.english === "string") &&

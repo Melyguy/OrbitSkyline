@@ -4,7 +4,8 @@ import AnimeCard from "./AnimeCard";
 import { useSavedAnimeCollection } from "./useSavedAnimeCollection";
 
 export default function SavedAnimeList() {
-  const { animeList, error, refreshError } = useSavedAnimeCollection();
+  const { animeList, error, migrationWarning, refreshError } =
+    useSavedAnimeCollection();
 
   return (
     <main className="min-h-screen px-5 pt-32 pb-16 text-foreground sm:px-8">
@@ -31,6 +32,11 @@ export default function SavedAnimeList() {
           </p>
         ) : (
           <>
+            {migrationWarning && (
+              <p role="status" className="mb-5 text-sm text-amber-200">
+                {migrationWarning}
+              </p>
+            )}
             {refreshError && (
               <p role="status" className="mb-5 text-sm text-amber-200">
                 Could not refresh episode counts. Showing saved counts instead:{" "}

@@ -5,7 +5,8 @@ import AnimeCity from "../components/AnimeCity";
 import { formatSavedAnimeEpisodeCount } from "../../lib/anime-list";
 
 export default function City() {
-  const { animeList, error, refreshError } = useSavedAnimeCollection();
+  const { animeList, error, migrationWarning, refreshError } =
+    useSavedAnimeCollection();
   const totalEpisodes = animeList.reduce(
     (total, anime) => total + (anime.episodes ?? 0),
     0,
@@ -40,6 +41,11 @@ export default function City() {
           </p>
         ) : (
           <>
+            {migrationWarning && (
+              <p role="status" className="mb-5 text-sm text-amber-200">
+                {migrationWarning}
+              </p>
+            )}
             {refreshError && (
               <p role="status" className="mb-5 text-sm text-amber-200">
                 Could not refresh episode counts. Showing saved counts instead:{" "}

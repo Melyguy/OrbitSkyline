@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import CollectionBrowsing from "./components/collectionbrowsing";
-import type { AnimeSort } from "@/lib/anilist/types";
+import type { AnimeSort } from "@/lib/shikimori/types";
 
 type HomeSearchParams = {
   search?: string | string[];

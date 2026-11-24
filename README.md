@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+Anime catalogue and episode data come from the public Shikimori GraphQL API. Its public API currently documents a limit of 90 requests per minute and 5 requests per second; catalogue responses are cached by Next.js. The first visit to the saved list or anime city attempts an exact-title migration of legacy AniList-saved entries. Items without a unique exact match are left unchanged.
+
 ## Getting Started
 
 First, run the development server:

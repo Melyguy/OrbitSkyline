@@ -1,4 +1,4 @@
-import { getSavedAnimeEpisodeCounts } from "@/lib/anilist/episode-counts";
+import { getSavedAnimeEpisodeCounts } from "@/lib/shikimori/episode-counts";
 
 const maxAnimeIdsPerRequest = 50;
 
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Could not refresh saved anime episode counts.", error);
     return Response.json(
-      { error: "AniList could not refresh the saved episode counts." },
+      { error: "Shikimori could not refresh the saved episode counts." },
       { status: 502 },
     );
   }
